@@ -6,7 +6,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4
 	google.golang.org/grpc v1.83.2
 	gopkg.in/ini.v1 v1.67.0
-	k8s.io/klog/v2 v2.130.1
+	k8s.io/klog/v2 v2.140.0
 	sigs.k8s.io/secrets-store-csi-driver v1.4.8
 )
 
