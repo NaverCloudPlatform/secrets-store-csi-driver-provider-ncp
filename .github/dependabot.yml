@@ -1,0 +1,26 @@
+# NCP Secrets Store CSI Driver Provider
+# Copyright (c) 2026-present NAVER Cloud Corp.
+# Apache-2.0
+#
+# govulncheck reports; this is what opens the pull request that fixes it. All
+# three ecosystems matter: the advisories that have hit this repository were Go
+# modules, the workflow pins its actions by commit, which nothing else would
+# ever move, and the image ships the Go toolchain's standard library and
+# Alpine's packages, which only the Dockerfile's base images decide.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

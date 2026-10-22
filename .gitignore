@@ -1,0 +1,16 @@
+# Local NCP credential file (never commit) — see examples/configure.example
+configure
+*.pem
+*.key
+.env*
+/bin/
+
+# Local cluster access files (kubeconfigs carry client certs — never commit)
+.*-config.yaml
+kubeconfig*
+*.kubeconfig
+
+# Editor scratch files — a .swp can hold the buffer of a credential file
+*.swp
+*.swo
+*~

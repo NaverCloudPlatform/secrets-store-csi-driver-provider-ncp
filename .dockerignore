@@ -1,0 +1,7 @@
+.git
+# Local NCP credentials must never enter the build context
+configure
+*.pem
+*.key
+.env*
+/bin/

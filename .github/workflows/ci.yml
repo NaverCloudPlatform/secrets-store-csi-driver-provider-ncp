@@ -1,0 +1,98 @@
+# NCP Secrets Store CSI Driver Provider
+# Copyright (c) 2026-present NAVER Cloud Corp.
+# Apache-2.0
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # govulncheck is the reason this runs on a schedule and not only on changes:
+  # the advisories that have mattered here landed on code that had not changed
+  # for weeks. A run against an untouched tree is the point, not waste.
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # A hung step would otherwise hold a runner for the six-hour default.
+    timeout-minutes: 15
+    steps:
+      # Pinned by commit, not by tag: a major tag is mutable, and a workspace
+      # with the repository checked out and GITHUB_TOKEN in it is what an
+      # action gets. Dependabot raises these the same way it raises go.mod.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # The newest 1.26 patch, not go.mod's 1.26.0: go.mod is the minimum
+          # the code needs, while the image is built on golang:1.26, which is
+          # the newest patch. govulncheck judges the standard library of the Go
+          # set up here, so this is what makes it judge the one that ships.
+          # Raise it with the Dockerfile's golang tag.
+          go-version: "1.26"
+          check-latest: true
+
+      - run: go mod tidy -diff
+      - run: go mod verify
+      - run: go build ./...
+      - run: go vet ./...
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "$unformatted"
+            exit 1
+          fi
+      - run: go test ./... -race -count=1
+
+      # .golangci.yml turns on checks nothing else runs -- bodyclose, nilerr,
+      # errorlint, staticcheck. Without this step the config is a promise the
+      # repository does not keep.
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          # The version this tree is verified against locally.
+          version: v2.13.2
+
+      # The image is what users run, and the Dockerfile is otherwise untested.
+      # Tagged so the binary scan below reads the binary this build produced.
+      - run: docker build -t provider:ci .
+
+      # Last, so a new advisory does not hide a test failure. Unpinned on
+      # purpose: the whole value is in getting advisories published since the
+      # last run.
+      #
+      # Built and run as two steps because they need different Go. The tool can
+      # need a newer one than is set up (v1.8.0 needs 1.26), which setup-go's
+      # GOTOOLCHAIN=local refuses to fetch, so the install alone sets auto. The
+      # scan must not: with auto in scope the go command re-executes as the
+      # newer toolchain and govulncheck judges that one's standard library, not
+      # the one this project builds with. -show version prints which Go it used.
+      - name: install govulncheck
+        env:
+          GOTOOLCHAIN: auto
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: govulncheck
+        run: "$(go env GOPATH)/bin/govulncheck -show version ./..."
+
+      # The scan above judges the Go set up here, and the image is built on
+      # Docker Hub's golang:1.26. Each takes the newest patch from its own
+      # source, so they match only while both have picked the same one. This
+      # reads the Go version and modules built into the shipped binary, so what
+      # it judges is the image by definition.
+      #
+      # The binary is built with -s, so it has no symbols to match and
+      # govulncheck falls back to module level: every advisory against the
+      # image's Go patch or a module in it fails this step, called or not. Red
+      # here means "rebuild on a newer patch", which is what fixes it; the source
+      # scan above says whether the code reaches it.
+      - name: govulncheck (image binary)
+        run: |
+          id=$(docker create provider:ci)
+          docker cp "$id":/usr/local/bin/secrets-store-csi-driver-provider-ncp provider-bin
+          docker rm "$id"
+          go version provider-bin
+          "$(go env GOPATH)/bin/govulncheck" -mode=binary provider-bin

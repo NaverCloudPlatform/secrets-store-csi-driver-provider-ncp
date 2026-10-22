@@ -1,0 +1,24 @@
+# NCP Secrets Store CSI Driver Provider
+# Copyright (c) 2026-present NAVER Cloud Corp.
+# Apache-2.0
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - name: my-pod
+      image: busybox
+      command: ["sleep", "1000000"]
+      volumeMounts:
+        - name: my-secret
+          mountPath: /var/secrets
+          readOnly: true
+  volumes:
+    - name: my-secret
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: my-secret

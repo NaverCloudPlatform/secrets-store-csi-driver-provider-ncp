@@ -1,0 +1,15 @@
+# NCP Secrets Store CSI Driver Provider
+# Copyright (c) 2026-present NAVER Cloud Corp.
+# Apache-2.0
+
+# NCP credentials for the provider. Create the Secret from this file:
+#   kubectl -n kube-system create secret generic ncp-secrets-store-credentials --from-file=./configure
+ncloud_access_key_id = YOUR_ACCESS_KEY
+ncloud_secret_access_key = YOUR_SECRET_KEY
+# The endpoint depends on region and on which KMS key protects the secret; the
+# path differs too, not just the host. See "Secret Manager API endpoints" in the
+# README.
+#   KR, isolated KMS key : https://ocapi-kr.ncloud.com/secretmanager/api/v1
+#   KR, global KMS key   : https://secretmanager.apigw.ntruss.com/api/v1
+#   JPN                  : https://ocapi-jp.ncloud.com/secretmanager/api/v1
+secretmanager_api_url = https://ocapi-kr.ncloud.com/secretmanager/api/v1
