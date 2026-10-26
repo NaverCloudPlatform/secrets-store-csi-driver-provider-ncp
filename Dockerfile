@@ -9,7 +9,7 @@
 # Base images are written out rather than built from ARGs: Dependabot skips a
 # FROM whose image comes from a build arg, and these two carry the Go standard
 # library and the OS packages the image ships. Keep the Alpine versions equal.
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine3.23 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine3.23 AS builder
 ARG VERSION=dev
 # Redeclared without a value on purpose: buildx fills these from --platform, and
 # giving them a default here pins that default instead, so every platform got an
