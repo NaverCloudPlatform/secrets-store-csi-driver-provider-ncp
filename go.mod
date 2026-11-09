@@ -3,7 +3,7 @@ module github.com/NaverCloudPlatform/secrets-store-csi-driver-provider-ncp
 go 1.26.0
 
 require (
-	go.yaml.in/yaml/v2 v2.4.4
+	go.yaml.in/yaml/v2 v2.4.5
 	google.golang.org/grpc v1.83.2
 	gopkg.in/ini.v1 v1.67.0
 	k8s.io/klog/v2 v2.130.1
